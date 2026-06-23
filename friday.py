@@ -1,6 +1,6 @@
 import asyncio
 import os
-import tempfile
+import uuid
 from pathlib import Path
 from dotenv import load_dotenv
 from openai_codex import AsyncCodex, LocalImageInput
@@ -13,7 +13,7 @@ TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 MODEL = os.environ.get("MODEL", "gpt-5.4")
 HERE = Path(__file__).parent
 SOUL  = (HERE / "soul" / "FRIDAY.md").read_text()
-SKILL = "\n\n---\n\n".join(p.read_text() for p in sorted((HERE / "skills").glob("*.md"), key=lambda p: (p.name != "sqlite.md", p.name)))
+SKILL = "\n\n---\n\n".join(p.read_text() for p in sorted((HERE / "skills").glob("*.md")))
 
 
 async def _run(update: Update, inputs):
@@ -41,16 +41,13 @@ async def handle_message(update: Update, _):
 async def handle_photo(update: Update, _):
     photo = update.message.photo[-1]
     caption = update.message.caption or ""
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as f:
-        tmp = Path(f.name)
-    await (await photo.get_file()).download_to_drive(str(tmp))
-    try:
-        inputs = [LocalImageInput(path=str(tmp))]
-        if caption:
-            inputs.append(caption)
-        await _run(update, inputs)
-    finally:
-        tmp.unlink(missing_ok=True)
+    photo_path = HERE / "data" / "photos" / "recipes" / f"{uuid.uuid4().hex}.jpg"
+    photo_path.parent.mkdir(parents=True, exist_ok=True)
+    await (await photo.get_file()).download_to_drive(str(photo_path))
+    inputs = [LocalImageInput(path=str(photo_path))]
+    if caption:
+        inputs.append(caption)
+    await _run(update, inputs)
 
 
 async def post_init(app):
