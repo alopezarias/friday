@@ -3,7 +3,7 @@ import os
 import uuid
 from pathlib import Path
 from dotenv import load_dotenv
-from openai_codex import AsyncCodex, LocalImageInput
+from openai_codex import AsyncCodex, LocalImageInput, TextInput
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters
 
@@ -46,7 +46,7 @@ async def handle_photo(update: Update, _):
     await (await photo.get_file()).download_to_drive(str(photo_path))
     inputs = [LocalImageInput(path=str(photo_path))]
     if caption:
-        inputs.append(caption)
+        inputs.append(TextInput(text=caption))
     await _run(update, inputs)
 
 

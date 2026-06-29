@@ -2,3 +2,5 @@
 .env
 
 data/friday.db
+
+data/photos/recipes/
